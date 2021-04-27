@@ -25,21 +25,20 @@ model_path = os.path.join(prefix, 'model')
 
 class ScoringService(object):
     model = None                # Where we keep the model when it's loaded
-    n_items = 0
-    
-    def __init__(self):
-        movielens = fetch_movielens()
-        n_users, self.n_items = movielens['train'].shape
+    n_items = None
         
     @classmethod
     def get_n_items(cls):
+        if cls.n_items == None:
+            movielens = fetch_movielens()
+            n_users, cls.n_items = movielens['train'].shape
         return cls.n_items
 
     @classmethod
     def get_model(cls):
         """Get the model object for this instance, loading it if it's not already loaded."""
         if cls.model == None:
-            with open(os.path.join(model_path, 'model.pickle'), 'rb') as inp:
+            with open('model.pickle', 'rb') as inp:
                 cls.model = pickle.load(inp)
         return cls.model
 
@@ -52,8 +51,7 @@ class ScoringService(object):
         clf = cls.get_model()
         
         item_ids = np.arange(cls.get_n_items())
-        
-        return input.apply(lambda x: clf.predict(x, item_ids))
+        return input.applymap(lambda x: clf.predict(x, item_ids))
 
 # The flask app for serving predictions
 app = flask.Flask(__name__)
@@ -90,7 +88,7 @@ def transformation():
 
     # Convert from numpy back to CSV
     out = io.StringIO()
-    pd.DataFrame({'results':predictions}).to_csv(out, header=False, index=False)
+    pd.DataFrame(predictions).to_csv(out, header=False, index=False)
     result = out.getvalue()
 
     return flask.Response(response=result, status=200, mimetype='text/csv')

@@ -8,8 +8,10 @@ MAINTAINER Amazon AI <sage-learner@amazon.com>
 
 RUN apt-get -y update && apt-get install -y --no-install-recommends \
          wget \
+         build-essential \
          python3-pip \
          python3-setuptools \
+         python3-dev \         
          nginx \
          ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -35,4 +37,5 @@ ENV PATH="/opt/program:${PATH}"
 
 # Set up the program in the image
 COPY light_fm /opt/program
+RUN chmod +x /opt/program/serve
 WORKDIR /opt/program
